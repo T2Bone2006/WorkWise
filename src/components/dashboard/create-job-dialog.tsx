@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import {  useTransition } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
+import { format } from "date-fns";
 import {
     Dialog,
     DialogContent,
@@ -30,8 +31,10 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
+import { DatePicker } from "@/components/ui/DatePicker";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
+import { createJob } from "@/lib/supabase/job-actions";
 
 const jobSchema = z.object({
     title: z.string().min(5, "Title must be at least 5 characters"),
@@ -46,10 +49,11 @@ type JobFormValues = z.infer<typeof jobSchema>;
 interface CreateJobDialogProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
+    onJobCreated?: (jobId: string) => void;
 }
 
-export function CreateJobDialog({ open, onOpenChange }: CreateJobDialogProps) {
-    const [isLoading, setIsLoading] = useState(false);
+export function CreateJobDialog({ open, onOpenChange, onJobCreated }: CreateJobDialogProps) {
+    const [isPending, startTransition] = useTransition();
 
     const form = useForm<JobFormValues>({
         resolver: zodResolver(jobSchema),
@@ -63,29 +67,27 @@ export function CreateJobDialog({ open, onOpenChange }: CreateJobDialogProps) {
     });
 
     async function onSubmit(data: JobFormValues) {
-        setIsLoading(true);
+        startTransition(async () => {
+            const result = await createJob(data);
 
-        try {
-            // TODO: Replace with actual API call to create job
-            await new Promise((resolve) => setTimeout(resolve, 1500));
+            if (result?.error) {
+                toast.error("Failed to create job", {
+                    description: result.error,
+                });
+                return;
+            }
 
-            console.log("Job data:", data);
-
-            toast.success("Job created successfully!", {
-                description: "We're matching you with qualified tradespeople now.",
-            });
-
-            // Reset form and close dialog
+            // Close dialog
             form.reset();
             onOpenChange(false);
-        } catch (error) {
-            toast.error("Failed to create job", {
-                description: "Please try again or contact support.",
-            });
-        } finally {
-            setIsLoading(false);
-        }
+
+            // Trigger loading overlay with job ID
+            if (onJobCreated && result.data) {
+                onJobCreated(result.data.id);
+            }
+        });
     }
+
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
@@ -108,7 +110,7 @@ export function CreateJobDialog({ open, onOpenChange }: CreateJobDialogProps) {
                                     <FormControl>
                                         <Input
                                             placeholder="e.g. Fix leaking kitchen tap"
-                                            disabled={isLoading}
+                                            disabled={isPending}
                                             {...field}
                                         />
                                     </FormControl>
@@ -127,7 +129,7 @@ export function CreateJobDialog({ open, onOpenChange }: CreateJobDialogProps) {
                                         <Textarea
                                             placeholder="Describe the issue in detail. Include any relevant information like location, symptoms, or previous attempts to fix."
                                             className="min-h-[100px] resize-none"
-                                            disabled={isLoading}
+                                            disabled={isPending}
                                             {...field}
                                         />
                                     </FormControl>
@@ -148,7 +150,7 @@ export function CreateJobDialog({ open, onOpenChange }: CreateJobDialogProps) {
                                     <FormControl>
                                         <Input
                                             placeholder="123 High Street, Manchester, M1 1AA"
-                                            disabled={isLoading}
+                                            disabled={isPending}
                                             {...field}
                                         />
                                     </FormControl>
@@ -165,7 +167,7 @@ export function CreateJobDialog({ open, onOpenChange }: CreateJobDialogProps) {
                                     <FormItem>
                                         <FormLabel>Urgency</FormLabel>
                                         <Select
-                                            disabled={isLoading}
+                                            disabled={isPending}
                                             onValueChange={field.onChange}
                                             defaultValue={field.value}
                                         >
@@ -193,10 +195,12 @@ export function CreateJobDialog({ open, onOpenChange }: CreateJobDialogProps) {
                                     <FormItem>
                                         <FormLabel>Preferred date (optional)</FormLabel>
                                         <FormControl>
-                                            <Input
-                                                type="date"
-                                                disabled={isLoading}
-                                                {...field}
+                                            <DatePicker
+                                                date={field.value ? new Date(field.value) : undefined}
+                                                setDate={(date) => {
+                                                    field.onChange(date ? format(date, "yyyy-MM-dd") : "");
+                                                }}
+                                                disabled={isPending}
                                             />
                                         </FormControl>
                                         <FormMessage />
@@ -210,12 +214,12 @@ export function CreateJobDialog({ open, onOpenChange }: CreateJobDialogProps) {
                                 type="button"
                                 variant="outline"
                                 onClick={() => onOpenChange(false)}
-                                disabled={isLoading}
+                                disabled={isPending}
                             >
                                 Cancel
                             </Button>
-                            <Button type="submit" disabled={isLoading}>
-                                {isLoading ? (
+                            <Button type="submit" disabled={isPending}>
+                                {isPending ? (
                                     <>
                                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                                         Creating job...

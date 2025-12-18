@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /workwise/workers
+Disallow: /jobs
+Disallow: /worker
+Disallow: /login
+Disallow: /register
+
+Sitemap: https://edentechnologies.co.uk/sitemap.xml

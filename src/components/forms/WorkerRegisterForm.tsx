@@ -24,7 +24,7 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
-import { workerSignup } from "@/lib/supabase/worker-auth-actions";
+import { workerSignup, checkWaitlistEmail } from "@/lib/supabase/worker-auth-actions";
 
 const registerSchema = z.object({
     fullName: z.string().min(2, "Full name must be at least 2 characters"),
@@ -50,6 +50,8 @@ export function WorkerRegisterForm() {
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [isPending, startTransition] = useTransition();
+    const [isCheckingWaitlist, setIsCheckingWaitlist] = useState(false);
+    const [waitlistFound, setWaitlistFound] = useState(false);
 
     const form = useForm<RegisterFormValues>({
         resolver: zodResolver(registerSchema),
@@ -62,6 +64,29 @@ export function WorkerRegisterForm() {
             confirmPassword: "",
         },
     });
+
+    const handleEmailBlur = async () => {
+        const email = form.getValues("email");
+        if (!email || !email.includes("@")) return;
+
+        setIsCheckingWaitlist(true);
+        try {
+            const result = await checkWaitlistEmail(email);
+            if (result.found && result.data) {
+                form.setValue("fullName", result.data.fullName);
+                form.setValue("phone", result.data.phone);
+                form.setValue("tradeType", result.data.tradeType);
+                setWaitlistFound(true);
+                toast.success("Welcome back!", {
+                    description: "We found your waitlist registration. Your details have been pre-filled.",
+                });
+            }
+        } catch {
+            // Ignore errors silently
+        } finally {
+            setIsCheckingWaitlist(false);
+        }
+    };
 
     async function onSubmit(data: RegisterFormValues) {
         startTransition(async () => {
@@ -111,14 +136,28 @@ export function WorkerRegisterForm() {
                         <FormItem>
                             <FormLabel>Email</FormLabel>
                             <FormControl>
-                                <Input
-                                    placeholder="john@example.com"
-                                    type="email"
-                                    autoComplete="email"
-                                    disabled={isPending}
-                                    {...field}
-                                />
+                                <div className="relative">
+                                    <Input
+                                        placeholder="john@example.com"
+                                        type="email"
+                                        autoComplete="email"
+                                        disabled={isPending}
+                                        {...field}
+                                        onBlur={(e) => {
+                                            field.onBlur();
+                                            handleEmailBlur();
+                                        }}
+                                    />
+                                    {isCheckingWaitlist && (
+                                        <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />
+                                    )}
+                                </div>
                             </FormControl>
+                            {waitlistFound && (
+                                <FormDescription className="text-emerald-600">
+                                    Waitlist registration found - details pre-filled
+                                </FormDescription>
+                            )}
                             <FormMessage />
                         </FormItem>
                     )}
