@@ -12,6 +12,8 @@ export function middleware(request: NextRequest) {
         '/workwise/terms',
         '/workwise/privacy',
         '/api/worker-waitlist',
+        '/robots.txt',
+        '/sitemap.xml',
     ];
 
     // Redirect root / to default page
