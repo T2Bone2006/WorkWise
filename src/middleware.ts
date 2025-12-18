@@ -4,7 +4,7 @@ export function middleware(request: NextRequest) {
     const { pathname } = request.nextUrl;
 
     // Default page
-    const defaultPage = '/app/workwise/workers';
+    const defaultPage = '/workwise/workers';
 
     // Allowed routes
     const allowedRoutes = [
