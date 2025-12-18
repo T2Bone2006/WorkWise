@@ -5,6 +5,7 @@ import {
     getWorkerConfirmationEmail,
     getWorkerReferralEmail
 } from "@/lib/emails/worker-confirmation";
+import {createServiceClient} from "@/lib/supabase/server-service";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -31,7 +32,7 @@ export async function POST(request: Request) {
         }
 
         // Create Supabase client
-        const supabase = await createClient();
+        const supabase = await createServiceClient();
 
         // Insert into worker_waitlist table
         const { data, error } = await supabase
