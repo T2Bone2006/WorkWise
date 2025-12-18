@@ -320,17 +320,6 @@ export function getWorkerReferralEmail(
                 </tr>
               </table>
               
-              <!-- Progress Badge -->
-              <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #fef3c7; border: 2px solid #fbbf24; border-radius: 8px;">
-                <tr>
-                  <td style="padding: 20px; text-align: center;">
-                    <p style="margin: 0; font-size: 15px; font-weight: 600; color: #92400e;">
-                      📊 Aiming for 100 tradespeople - currently at 47
-                    </p>
-                  </td>
-                </tr>
-              </table>
-              
               <!-- ADD THIS NEW SECTION -->
               <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%); border: 2px solid #10b981; border-radius: 12px; margin: 32px 0;">
                 <tr>
