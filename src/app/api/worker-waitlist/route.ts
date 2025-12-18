@@ -31,7 +31,10 @@ export async function POST(request: Request) {
         }
 
         // Create Supabase client
-        const supabase = await createClient();
+        const supabase = await createClient(
+            process.env.NEXT_PUBLIC_SUPABASE_URL!,
+            process.env.SUPABASE_SERVICE_ROLE_KEY!
+        );
 
         // Insert into worker_waitlist table
         const { data, error } = await supabase
