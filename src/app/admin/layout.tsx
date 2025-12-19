@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { ThemeProvider } from "@/components/workwise/theme-provider";
+import {Suspense} from "react";
 
 
 export const metadata: Metadata = {
@@ -19,9 +20,11 @@ export default function AdminLayout({
             enableSystem
             disableTransitionOnChange
         >
+            <Suspense fallback={<div>Loading...</div>}>
             <div className="min-h-screen bg-background">
                 {children}
             </div>
+            </Suspense>
         </ThemeProvider>
     );
 }

@@ -15,7 +15,9 @@ export async function middleware(request: NextRequest) {
         '/api/worker-waitlist',
         '/login',
         '/register',
-        '/admin/login', // Admin login page is public
+        '/admin/login',
+        '/sitemap.xml',
+        '/robots.txt',
     ];
 
     // Redirect root / to default page
