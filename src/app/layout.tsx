@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import "leaflet/dist/leaflet.css";
 import 'react-day-picker/dist/style.css';
 import { Toaster } from "@/components/ui/sonner";
 

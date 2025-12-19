@@ -128,6 +128,7 @@ export function WorkerSignupForm() {
                         Trade <span className="text-red-500">*</span>
                     </Label>
                     <Select
+                        aria-label="Select your trade"
                         required
                         value={formData.trade_type}
                         onValueChange={(value) => setFormData({...formData, trade_type: value})}

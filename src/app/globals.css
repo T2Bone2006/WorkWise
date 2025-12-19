@@ -109,3 +109,30 @@ html.no-transitions *::before,
 html.no-transitions *::after {
   transition: none !important;
 }
+
+/* ===============================
+   Leaflet Popup Styling
+   =============================== */
+
+/*.leaflet-container .leaflet-popup-content-wrapper {*/
+/*  background: hsl(var(--card));*/
+/*  color: hsl(var(--foreground));*/
+/*  border-radius: 14px;*/
+/*  padding: 0;*/
+/*  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.18);*/
+/*}*/
+
+/*.leaflet-container .leaflet-popup-content {*/
+/*  margin: 0;*/
+/*  padding: 12px 14px;*/
+/*  font-family: inherit;*/
+/*  line-height: 1.4;*/
+/*}*/
+
+/*.leaflet-container .leaflet-popup-tip {*/
+/*  background: hsl(var(--card));*/
+/*}*/
+
+/*.leaflet-container .leaflet-popup-close-button {*/
+/*  display: none;*/
+/*}*/
