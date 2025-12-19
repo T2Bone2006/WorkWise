@@ -1,9 +1,11 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Bell, Settings, LogOut } from "lucide-react";
+import { Bell, Settings, LogOut, Sun, Moon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { useTheme } from "next-themes";
 
 interface AppHeaderProps {
     logoutRedirect?: string;
@@ -14,6 +16,12 @@ interface AppHeaderProps {
 export function AppHeader({ logoutRedirect = "/login" }: AppHeaderProps) {
     const router = useRouter();
     const supabase = createClient();
+    const { theme, setTheme } = useTheme();
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
 
     const handleSignOut = async () => {
         await supabase.auth.signOut();
@@ -38,6 +46,23 @@ export function AppHeader({ logoutRedirect = "/login" }: AppHeaderProps) {
                     <Button variant="ghost" size="icon" className="h-9 w-9">
                         <Settings className="h-4 w-4" />
                     </Button>
+
+                    {/* Theme Toggle */}
+                    {mounted && (
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-9 w-9"
+                            onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+                            aria-label="Toggle theme"
+                        >
+                            {theme === "dark" ? (
+                                <Sun className="h-4 w-4 text-yellow-500" />
+                            ) : (
+                                <Moon className="h-4 w-4 text-blue-500" />
+                            )}
+                        </Button>
+                    )}
 
                     <div className="h-6 w-px bg-border/40 mx-2" />
 

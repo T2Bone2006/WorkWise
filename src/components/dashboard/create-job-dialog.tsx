@@ -36,10 +36,17 @@ import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import { createJob } from "@/lib/supabase/job-actions";
 
+// UK postcode regex pattern
+const UK_POSTCODE_REGEX = /^[A-Z]{1,2}\d{1,2}[A-Z]?\s?\d[A-Z]{2}$/i;
+
 const jobSchema = z.object({
     title: z.string().min(5, "Title must be at least 5 characters"),
     description: z.string().min(20, "Description must be at least 20 characters"),
     propertyAddress: z.string().min(5, "Property address is required"),
+    propertyPostcode: z.string().min(1, "Postcode is required").refine(
+        (postcode) => UK_POSTCODE_REGEX.test(postcode.trim()),
+        "Please enter a valid UK postcode (e.g., M1 1AA)"
+    ),
     urgency: z.enum(["low", "medium", "high", "emergency"]),
     preferredDate: z.string().optional(),
 });
@@ -61,6 +68,7 @@ export function CreateJobDialog({ open, onOpenChange, onJobCreated }: CreateJobD
             title: "",
             description: "",
             propertyAddress: "",
+            propertyPostcode: "",
             urgency: "medium",
             preferredDate: "",
         },
@@ -141,23 +149,44 @@ export function CreateJobDialog({ open, onOpenChange, onJobCreated }: CreateJobD
                             )}
                         />
 
-                        <FormField
-                            control={form.control}
-                            name="propertyAddress"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Property address</FormLabel>
-                                    <FormControl>
-                                        <Input
-                                            placeholder="123 High Street, Manchester, M1 1AA"
-                                            disabled={isPending}
-                                            {...field}
-                                        />
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
+                        <div className="grid grid-cols-3 gap-4">
+                            <FormField
+                                control={form.control}
+                                name="propertyAddress"
+                                render={({ field }) => (
+                                    <FormItem className="col-span-2">
+                                        <FormLabel>Property address</FormLabel>
+                                        <FormControl>
+                                            <Input
+                                                placeholder="e.g., 123 High Street, Manchester"
+                                                disabled={isPending}
+                                                {...field}
+                                            />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+
+                            <FormField
+                                control={form.control}
+                                name="propertyPostcode"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Postcode</FormLabel>
+                                        <FormControl>
+                                            <Input
+                                                placeholder="M1 1AA"
+                                                disabled={isPending}
+                                                {...field}
+                                                onChange={(e) => field.onChange(e.target.value.toUpperCase())}
+                                            />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                        </div>
 
                         <div className="grid grid-cols-2 gap-4">
                             <FormField

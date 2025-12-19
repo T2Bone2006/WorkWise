@@ -27,7 +27,7 @@
 
 /* Light mode (default) */
 :root {
-  --background: oklch(98% 0.002 240);
+  --background: oklch(98.5% 0.002 240);
   --foreground: oklch(15% 0.01 240);
 
   --primary: oklch(50% 0.2 265);
@@ -37,7 +37,7 @@
   --secondary-foreground: oklch(20% 0.01 240);
 
   --muted: oklch(96% 0.005 240);
-  --muted-foreground: oklch(40% 0.01 240);
+  --muted-foreground: oklch(45% 0.01 240);
 
   --accent: oklch(95% 0.008 240);
   --accent-foreground: oklch(20% 0.01 240);
@@ -48,8 +48,9 @@
   --popover: oklch(100% 0 0);
   --popover-foreground: oklch(15% 0.01 240);
 
-  --border: oklch(88% 0.008 240);
-  --input: oklch(90% 0.008 240);
+  /* Subtle borders - barely visible gray */
+  --border: oklch(92% 0.004 240);
+  --input: oklch(92% 0.004 240);
   --ring: oklch(50% 0.2 265);
 
   --destructive: oklch(55% 0.22 25);
@@ -58,29 +59,30 @@
 
 /* Dark mode - triggered by .dark class from next-themes */
 .dark {
-  --background: oklch(10% 0.015 260);
+  --background: oklch(12% 0.015 260);
   --foreground: oklch(95% 0.005 240);
 
   --primary: oklch(65% 0.18 265);
   --primary-foreground: oklch(100% 0 0);
 
-  --secondary: oklch(16% 0.02 260);
+  --secondary: oklch(18% 0.02 260);
   --secondary-foreground: oklch(95% 0.005 240);
 
-  --muted: oklch(16% 0.02 260);
-  --muted-foreground: oklch(65% 0.01 240);
+  --muted: oklch(18% 0.02 260);
+  --muted-foreground: oklch(60% 0.01 240);
 
-  --accent: oklch(18% 0.025 260);
+  --accent: oklch(20% 0.025 260);
   --accent-foreground: oklch(95% 0.005 240);
 
-  --card: oklch(13% 0.02 260);
+  --card: oklch(15% 0.02 260);
   --card-foreground: oklch(95% 0.005 240);
 
-  --popover: oklch(13% 0.02 260);
+  --popover: oklch(15% 0.02 260);
   --popover-foreground: oklch(95% 0.005 240);
 
-  --border: oklch(22% 0.018 260);
-  --input: oklch(20% 0.02 260);
+  /* Subtle borders - slightly lighter than card background */
+  --border: oklch(22% 0.015 260);
+  --input: oklch(22% 0.015 260);
   --ring: oklch(65% 0.18 265);
 
   --destructive: oklch(55% 0.20 25);
@@ -92,6 +94,13 @@
 body {
   @apply bg-background text-foreground antialiased;
   font-feature-settings: "rlig" 1, "calt" 1;
+}
+
+/* Set default border color globally */
+*,
+*::before,
+*::after {
+  border-color: var(--border);
 }
 
 /* Smooth theme transitions */

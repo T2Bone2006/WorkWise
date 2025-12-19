@@ -1,9 +1,13 @@
 import Link from "next/link";
 import { WorkerLoginForm } from "@/components/forms/WorkerLoginForm";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 
 export default function WorkerLoginPage() {
     return (
-        <div className="min-h-screen flex items-center justify-center bg-background p-4">
+        <div className="min-h-screen flex items-center justify-center bg-background p-4 relative">
+            {/* Theme Toggle - Top Right */}
+            <ThemeToggle className="absolute top-4 right-4" />
+
             <div className="w-full max-w-md space-y-8">
                 {/* Header */}
                 <div className="text-center space-y-2">

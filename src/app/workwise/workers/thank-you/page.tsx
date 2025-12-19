@@ -1,10 +1,12 @@
 import { CheckCircle2 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 
 export default function ThankYouPage() {
     return (
-        <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <div className="min-h-screen bg-background flex items-center justify-center p-4 relative">
+            <ThemeToggle className="absolute top-4 right-4" />
             <div className="max-w-md w-full text-center">
                 <div className="mb-8">
                     <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-primary/10 mb-6">

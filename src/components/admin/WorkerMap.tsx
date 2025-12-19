@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import {MapContainer, TileLayer, Marker, Popup, CircleMarker} from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 
+import { UK_POSTCODE_AREAS, extractPostcodeArea, getRegionName } from "@/lib/data/uk-postcodes";
+
 import Supercluster from "supercluster";
 
 import { useMapEvents } from "react-leaflet";
@@ -214,9 +216,8 @@ export default function WorkerMap({ workers }: WorkerMapProps) {
             const regionCounts: Record<string, number> = {};
 
             for (const worker of workers) {
-                // Count by postcode prefix (first part before space, or first 1-2 letters)
-                const prefix = worker.postcode.split(" ")[0] || worker.postcode.substring(0, 2);
-                const regionKey = prefix.replace(/[0-9]/g, "").toUpperCase();
+
+                const regionKey = extractPostcodeArea(worker.postcode);
                 regionCounts[regionKey] = (regionCounts[regionKey] || 0) + 1;
 
                 // Geocode the postcode
@@ -241,42 +242,6 @@ export default function WorkerMap({ workers }: WorkerMapProps) {
 
         geocodeWorkers();
     }, [workers]);
-
-    // Region name mapping for common UK postcode prefixes
-    const regionNames: Record<string, string> = {
-        M: "Manchester",
-        L: "Liverpool",
-        B: "Birmingham",
-        S: "Sheffield",
-        LS: "Leeds",
-        BD: "Bradford",
-        WF: "Wakefield",
-        HD: "Huddersfield",
-        HX: "Halifax",
-        OL: "Oldham",
-        BL: "Bolton",
-        WN: "Wigan",
-        SK: "Stockport",
-        WA: "Warrington",
-        CH: "Chester",
-        CW: "Crewe",
-        ST: "Stoke-on-Trent",
-        DE: "Derby",
-        NG: "Nottingham",
-        LE: "Leicester",
-        CV: "Coventry",
-        WS: "Walsall",
-        WV: "Wolverhampton",
-        DY: "Dudley",
-        N: "North London",
-        E: "East London",
-        W: "West London",
-        SW: "South West London",
-        SE: "South East London",
-        NW: "North West London",
-        EC: "Central London",
-        WC: "Central London",
-    };
 
     return (
         <div className="flex flex-col lg:flex-row h-[calc(100vh-4rem)] gap-4 p-4">
@@ -319,11 +284,9 @@ export default function WorkerMap({ workers }: WorkerMapProps) {
                                     >
                                         <div>
                                             <span className="font-medium">{region}</span>
-                                            {regionNames[region] && (
-                                                <span className="text-sm text-muted-foreground ml-2">
-                                                    ({regionNames[region]})
-                                                </span>
-                                            )}
+                                            <span className="text-sm text-muted-foreground ml-2">
+                                            ({getRegionName(region)})
+                                        </span>
                                         </div>
                                         <span className="font-bold">{count}</span>
                                     </div>

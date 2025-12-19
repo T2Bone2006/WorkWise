@@ -1,10 +1,14 @@
 import Link from "next/link";
 import { LoginForm } from "@/components/forms/login-form";
 import { Building2 } from "lucide-react";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 
 export default function LoginPage() {
     return (
-        <div className="min-h-screen flex">
+        <div className="min-h-screen flex relative">
+            {/* Theme Toggle - Top Right */}
+            <ThemeToggle className="absolute top-4 right-4 z-10" />
+
             {/* Left side - Login Form */}
             <div className="flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-8 bg-background">
                 <div className="w-full max-w-md space-y-8 animate-fade-in">

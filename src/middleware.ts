@@ -74,8 +74,7 @@ export async function middleware(request: NextRequest) {
             .single();
 
         if (!adminData) {
-            // Not an admin, sign them out and redirect to admin login
-            // We can't sign out in middleware, so just redirect with an error param
+            // Not an admin, redirect to admin login with error
             return NextResponse.redirect(new URL('/admin/login?error=unauthorized', request.url));
         }
 
@@ -83,8 +82,8 @@ export async function middleware(request: NextRequest) {
         return response;
     }
 
-    // Redirect all other routes to default page
-    return NextResponse.redirect(new URL(defaultPage, request.url));
+    // Allow all other routes (worker dashboard, client dashboard, etc.)
+    return NextResponse.next();
 }
 
 export const config = {

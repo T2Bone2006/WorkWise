@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { InterviewChat } from "@/components/worker/InterviewChat";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 
 export default async function OnboardPage() {
     const supabase = await createClient();
@@ -36,7 +37,10 @@ export default async function OnboardPage() {
     }
 
     return (
-        <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <div className="min-h-screen bg-background flex items-center justify-center p-4 relative">
+            {/* Theme Toggle - Top Right */}
+            <ThemeToggle className="absolute top-4 right-4" />
+
             <div className="w-full max-w-3xl">
                 <InterviewChat worker={worker} />
             </div>

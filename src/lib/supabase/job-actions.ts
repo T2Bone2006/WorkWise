@@ -9,6 +9,7 @@ export async function createJob(data: {
     title: string
     description: string
     propertyAddress: string
+    propertyPostcode: string
     urgency: string
     preferredDate?: string
 }) {
@@ -22,6 +23,9 @@ export async function createJob(data: {
         return { error: 'Not authenticated' }
     }
 
+    // Normalize postcode (uppercase, proper spacing)
+    const normalizedPostcode = data.propertyPostcode.toUpperCase().trim()
+
     // Create job
     const { data: job, error } = await supabase
         .from('jobs')
@@ -30,6 +34,7 @@ export async function createJob(data: {
             title: data.title,
             description: data.description,
             property_address: data.propertyAddress,
+            property_postcode: normalizedPostcode,
             urgency: data.urgency,
             preferred_date: data.preferredDate || null,
             status: 'pending',

@@ -20,6 +20,7 @@ import {
     AlertCircle,
 } from "lucide-react";
 import { acceptJob, declineJob } from "@/lib/supabase/worker-job-actions";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 
 interface Client {
     company_name: string;
@@ -111,7 +112,8 @@ export function JobResponseView({ job, estimatedCost, initialAction }: JobRespon
     // Already responded to this job
     if (job.status !== "assigned") {
         return (
-            <div className="min-h-screen bg-background flex items-center justify-center p-4">
+            <div className="min-h-screen bg-background flex items-center justify-center p-4 relative">
+                <ThemeToggle className="absolute top-4 right-4" />
                 <Card className="p-8 max-w-md text-center">
                     <AlertCircle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                     <h2 className="text-xl font-semibold mb-2">Already Responded</h2>
@@ -128,7 +130,8 @@ export function JobResponseView({ job, estimatedCost, initialAction }: JobRespon
 
     if (isComplete) {
         return (
-            <div className="min-h-screen bg-background flex items-center justify-center p-4">
+            <div className="min-h-screen bg-background flex items-center justify-center p-4 relative">
+                <ThemeToggle className="absolute top-4 right-4" />
                 <Card className="p-8 max-w-md text-center">
                     <CheckCircle className="h-12 w-12 text-emerald-500 mx-auto mb-4" />
                     <h2 className="text-xl font-semibold mb-2">
@@ -146,7 +149,8 @@ export function JobResponseView({ job, estimatedCost, initialAction }: JobRespon
     }
 
     return (
-        <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <div className="min-h-screen bg-background flex items-center justify-center p-4 relative">
+            <ThemeToggle className="absolute top-4 right-4" />
             <div className="w-full max-w-2xl space-y-6">
                 {/* Header */}
                 <div className="text-center">

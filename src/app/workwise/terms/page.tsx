@@ -1,6 +1,9 @@
+import { ThemeToggle } from "@/components/ui/theme-toggle";
+
 export default function TermsPage() {
     return (
-        <main className="bg-background min-h-screen flex flex-col">
+        <main className="bg-background min-h-screen flex flex-col relative">
+            <ThemeToggle className="absolute top-4 right-4" />
             <div className="container mx-auto px-6 py-24 max-w-4xl">
                 <h1 className="text-4xl font-bold text-foreground mb-8">Terms & Conditions</h1>
 

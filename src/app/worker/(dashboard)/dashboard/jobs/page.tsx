@@ -24,30 +24,43 @@ export default async function MyJobsPage() {
         redirect("/worker/login");
     }
 
-    // Get all jobs assigned to this worker (active and completed)
+    // Get all jobs assigned to this worker (pending acceptance, active, and completed)
     // Don't require worker_matches - job might be directly assigned
     const { data: jobs, error } = await supabase
         .from("jobs")
         .select("*")
         .eq("assigned_worker_id", worker.id)
-        .in("status", ["assigned", "completed"])
+        .in("status", ["assigned", "in_progress", "completed"])
         .order("assigned_at", { ascending: false });
 
     if (error) {
         console.error("Error fetching jobs:", error);
     }
 
-    // Fetch client data separately for each job
-    const jobsWithClients = await Promise.all(
+    // Fetch client and match data for each job
+    const jobsWithDetails = await Promise.all(
         (jobs || []).map(async (job) => {
-            const { data: client } = await supabase
-                .from("b2b_clients")
-                .select("company_name, full_name, email, phone")
-                .eq("id", job.client_id)
-                .single();
-            return { ...job, client: client || { company_name: "Unknown", full_name: "Unknown", email: "", phone: null } };
+            const [clientResult, matchResult] = await Promise.all([
+                supabase
+                    .from("b2b_clients")
+                    .select("company_name, full_name, email, phone")
+                    .eq("id", job.client_id)
+                    .single(),
+                supabase
+                    .from("worker_matches")
+                    .select("total_cost")
+                    .eq("job_id", job.id)
+                    .eq("worker_id", worker.id)
+                    .single()
+            ]);
+
+            return {
+                ...job,
+                client: clientResult.data || { company_name: "Unknown", full_name: "Unknown", email: "", phone: null },
+                quote: matchResult.data?.total_cost || null
+            };
         })
     );
 
-    return <MyJobsView jobs={jobsWithClients} />;
+    return <MyJobsView jobs={jobsWithDetails} workerId={worker.id} />;
 }

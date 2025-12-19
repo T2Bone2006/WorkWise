@@ -4,6 +4,7 @@ import "./globals.css";
 import "leaflet/dist/leaflet.css";
 import 'react-day-picker/dist/style.css';
 import { Toaster } from "@/components/ui/sonner";
+import { ThemeProvider } from "@/components/workwise/theme-provider";
 
 const inter = Inter({
     subsets: ["latin"],
@@ -23,8 +24,15 @@ export default function RootLayout({
     return (
         <html lang="en" suppressHydrationWarning>
         <body className={`${inter.className} antialiased`}>
-        {children}
-        <Toaster />
+        <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+        >
+            {children}
+            <Toaster />
+        </ThemeProvider>
         </body>
         </html>
     );

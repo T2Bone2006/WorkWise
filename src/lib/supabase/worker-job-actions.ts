@@ -65,7 +65,6 @@ export async function acceptJob(jobId: string) {
         .from('jobs')
         .update({
             status: 'in_progress',
-            accepted_at: new Date().toISOString(),
         })
         .eq('id', jobId)
 

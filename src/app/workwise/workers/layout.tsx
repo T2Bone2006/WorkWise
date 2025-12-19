@@ -1,5 +1,3 @@
-import { ThemeProvider } from "@/components/workwise/theme-provider";
-import "@/app/globals.css";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -12,14 +10,5 @@ export default function WorkersRootLayout({
                                           }: {
     children: React.ReactNode;
 }) {
-    return (
-        <ThemeProvider
-            attribute="class"
-            defaultTheme="system"
-            enableSystem
-            disableTransitionOnChange
-        >
-            {children}
-        </ThemeProvider>
-    );
+    return <>{children}</>;
 }

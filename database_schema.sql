@@ -1,6 +1,13 @@
 -- WARNING: This schema is for context only and is not meant to be run.
 -- Table order and constraints may not be valid for execution.
 
+CREATE TABLE public.admins (
+                               id uuid NOT NULL DEFAULT gen_random_uuid(),
+                               user_id uuid NOT NULL UNIQUE,
+                               created_at timestamp with time zone DEFAULT now(),
+                               CONSTRAINT admins_pkey PRIMARY KEY (id),
+                               CONSTRAINT admins_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id)
+);
 CREATE TABLE public.b2b_clients (
                                     id uuid NOT NULL DEFAULT gen_random_uuid(),
                                     company_name text NOT NULL,

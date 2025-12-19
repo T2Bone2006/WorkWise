@@ -31,12 +31,18 @@ export default async function WorkerDashboardPage() {
         .eq("worker_id", worker.id)
         .single();
 
-    // Get stats - only count jobs where client has assigned this worker
-    const { count: activeCount } = await supabase
+    // Get stats - count pending (assigned) and in-progress jobs separately
+    const { count: pendingCount } = await supabase
         .from("jobs")
         .select("*", { count: "exact", head: true })
         .eq("assigned_worker_id", worker.id)
         .eq("status", "assigned");
+
+    const { count: inProgressCount } = await supabase
+        .from("jobs")
+        .select("*", { count: "exact", head: true })
+        .eq("assigned_worker_id", worker.id)
+        .eq("status", "in_progress");
 
     const { count: completedCount } = await supabase
         .from("jobs")
@@ -44,8 +50,8 @@ export default async function WorkerDashboardPage() {
         .eq("assigned_worker_id", worker.id)
         .eq("status", "completed");
 
-    // Get active jobs (assigned by client to this worker)
-    const { data: activeJobs } = await supabase
+    // Get pending jobs (awaiting acceptance)
+    const { data: pendingJobs } = await supabase
         .from("jobs")
         .select("*")
         .eq("assigned_worker_id", worker.id)
@@ -53,15 +59,60 @@ export default async function WorkerDashboardPage() {
         .order("assigned_at", { ascending: false })
         .limit(5);
 
-    // Fetch client data separately for each job
-    const activeJobsWithClients = await Promise.all(
+    // Get active jobs (in progress)
+    const { data: activeJobs } = await supabase
+        .from("jobs")
+        .select("*")
+        .eq("assigned_worker_id", worker.id)
+        .eq("status", "in_progress")
+        .order("assigned_at", { ascending: false })
+        .limit(5);
+
+    // Fetch client and quote data for pending jobs
+    const pendingJobsWithDetails = await Promise.all(
+        (pendingJobs || []).map(async (job) => {
+            const [clientResult, matchResult] = await Promise.all([
+                supabase
+                    .from("b2b_clients")
+                    .select("company_name, full_name, email, phone")
+                    .eq("id", job.client_id)
+                    .single(),
+                supabase
+                    .from("worker_matches")
+                    .select("total_cost")
+                    .eq("job_id", job.id)
+                    .eq("worker_id", worker.id)
+                    .single()
+            ]);
+            return {
+                ...job,
+                client: clientResult.data || { company_name: "Unknown", full_name: "Unknown", email: "", phone: null },
+                quote: matchResult.data?.total_cost || null
+            };
+        })
+    );
+
+    // Fetch client and quote data for active jobs
+    const activeJobsWithDetails = await Promise.all(
         (activeJobs || []).map(async (job) => {
-            const { data: client } = await supabase
-                .from("b2b_clients")
-                .select("company_name, full_name, email, phone")
-                .eq("id", job.client_id)
-                .single();
-            return { ...job, client: client || { company_name: "Unknown", full_name: "Unknown", email: "", phone: null } };
+            const [clientResult, matchResult] = await Promise.all([
+                supabase
+                    .from("b2b_clients")
+                    .select("company_name, full_name, email, phone")
+                    .eq("id", job.client_id)
+                    .single(),
+                supabase
+                    .from("worker_matches")
+                    .select("total_cost")
+                    .eq("job_id", job.id)
+                    .eq("worker_id", worker.id)
+                    .single()
+            ]);
+            return {
+                ...job,
+                client: clientResult.data || { company_name: "Unknown", full_name: "Unknown", email: "", phone: null },
+                quote: matchResult.data?.total_cost || null
+            };
         })
     );
 
@@ -70,10 +121,12 @@ export default async function WorkerDashboardPage() {
             worker={worker}
             interviewCompleted={aiProfile?.interview_completed || false}
             stats={{
-                active: activeCount || 0,
+                pending: pendingCount || 0,
+                active: inProgressCount || 0,
                 completed: completedCount || 0,
             }}
-            activeJobs={activeJobsWithClients}
+            pendingJobs={pendingJobsWithDetails}
+            activeJobs={activeJobsWithDetails}
         />
     );
 }
