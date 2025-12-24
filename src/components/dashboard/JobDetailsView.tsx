@@ -192,8 +192,20 @@ export function JobDetailsView({ job }: JobDetailsViewProps) {
                     </div>
                 </div>
 
-                {/* Status Controls - only show when assigned */}
-                {job.status === "assigned" && (
+                {/* Status Controls */}
+                {(job.status === "pending" || job.status === "matched") && (
+                    <div className="flex gap-2">
+                        <Button
+                            variant="outline"
+                            onClick={() => setShowCancelDialog(true)}
+                            className="text-destructive border-destructive hover:bg-destructive hover:text-destructive-foreground"
+                        >
+                            <XCircle className="mr-2 h-4 w-4" />
+                            Cancel Job
+                        </Button>
+                    </div>
+                )}
+                {(job.status === "assigned" || job.status === "in_progress") && (
                     <div className="flex gap-2">
                         <Button
                             onClick={handleMarkCompleted}

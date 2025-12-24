@@ -30,6 +30,7 @@ const registerSchema = z.object({
     fullName: z.string().min(2, "Full name must be at least 2 characters"),
     email: z.string().email("Please enter a valid email address"),
     phone: z.string().min(10, "Please enter a valid phone number"),
+    postcode: z.string().min(5, "Please enter a valid UK postcode"),
     tradeType: z.string().min(1, "Please select your trade"),
     password: z
         .string()
@@ -59,6 +60,7 @@ export function WorkerRegisterForm() {
             fullName: "",
             email: "",
             phone: "",
+            postcode: "",
             tradeType: "",
             password: "",
             confirmPassword: "",
@@ -75,6 +77,7 @@ export function WorkerRegisterForm() {
             if (result.found && result.data) {
                 form.setValue("fullName", result.data.fullName);
                 form.setValue("phone", result.data.phone);
+                form.setValue("postcode", result.data.postcode || "");
                 form.setValue("tradeType", result.data.tradeType);
                 setWaitlistFound(true);
                 toast.success("Welcome back!", {
@@ -95,7 +98,8 @@ export function WorkerRegisterForm() {
                 data.password,
                 data.fullName,
                 data.phone,
-                data.tradeType
+                data.tradeType,
+                data.postcode
             );
 
             if (result?.error) {
@@ -178,6 +182,28 @@ export function WorkerRegisterForm() {
                                     {...field}
                                 />
                             </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                    )}
+                />
+
+                <FormField
+                    control={form.control}
+                    name="postcode"
+                    render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Postcode</FormLabel>
+                            <FormControl>
+                                <Input
+                                    placeholder="M1 5BQ"
+                                    autoComplete="postal-code"
+                                    disabled={isPending}
+                                    {...field}
+                                />
+                            </FormControl>
+                            <FormDescription className="text-xs">
+                                Your base location for calculating travel distances
+                            </FormDescription>
                             <FormMessage />
                         </FormItem>
                     )}

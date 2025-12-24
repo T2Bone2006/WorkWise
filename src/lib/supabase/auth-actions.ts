@@ -40,7 +40,7 @@ export async function login(email: string, password: string) {
         .single()
 
     if (workerData) {
-        redirect('/workwise/workers/dashboard')
+        redirect('/worker/dashboard')
     }
 
     // If neither, log them out

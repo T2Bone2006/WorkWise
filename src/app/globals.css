@@ -145,3 +145,26 @@ html.no-transitions *::after {
 /*.leaflet-container .leaflet-popup-close-button {*/
 /*  display: none;*/
 /*}*/
+
+/* Add these utilities if they don't exist */
+.glass-card {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.3s ease;
+}
+
+.glass-card:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(59, 130, 246, 0.3);
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: 0 0 40px -10px rgba(59, 130, 246, 0.4);
+}
+
+.text-gradient {
+  background: linear-gradient(to right, #3b82f6, #8b5cf6);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}

@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation'
 import { Resend } from 'resend'
 import { createClient } from './server'
 import { getWorkerInviteEmail } from '../emails/worker-invite'
+import { geocodePostcode } from '../geocoding'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
 
@@ -41,7 +42,8 @@ export async function workerSignup(
     password: string,
     fullName: string,
     phone: string,
-    tradeType: string
+    tradeType: string,
+    postcode: string
 ) {
     const supabase = await createClient()
 
@@ -67,7 +69,19 @@ export async function workerSignup(
     const workerFullName = waitlistEntry?.full_name || fullName
     const workerPhone = waitlistEntry?.phone || phone
     const workerTradeType = waitlistEntry?.trade_type || tradeType
-    const workerPostcode = waitlistEntry?.postcode || null
+    const workerPostcode = postcode || waitlistEntry?.postcode || null
+
+    // Geocode the postcode to get coordinates
+    let coordinates: { latitude: number; longitude: number } | null = null
+    if (workerPostcode) {
+        const geocodeResult = await geocodePostcode(workerPostcode)
+        if (geocodeResult) {
+            coordinates = {
+                latitude: geocodeResult.latitude,
+                longitude: geocodeResult.longitude,
+            }
+        }
+    }
 
     // 1. Create auth user
     const { data: authData, error: authError } = await supabase.auth.signUp({
@@ -83,7 +97,8 @@ export async function workerSignup(
         return { error: 'Failed to create user' }
     }
 
-    // 2. Create worker record
+    // 2. Create worker record with geocoded coordinates
+    // Note: We populate both 'postcode' and 'base_postcode' for backwards compatibility
     const { error: workerError } = await supabase.from('workers').insert({
         user_id: authData.user.id,
         full_name: workerFullName,
@@ -91,6 +106,10 @@ export async function workerSignup(
         phone: workerPhone,
         trade_type: workerTradeType,
         postcode: workerPostcode,
+        base_postcode: workerPostcode,
+        base_latitude: coordinates?.latitude || null,
+        base_longitude: coordinates?.longitude || null,
+        service_radius_miles: 25, // Default 25 mile radius
         status: 'pending', // Will become 'active' after completing AI interview
     })
 
@@ -223,11 +242,11 @@ export async function inviteWorkerFromWaitlist(waitlistId: string) {
 export async function inviteAllPendingWorkers() {
     const supabase = await createClient()
 
-    // Get all pending waitlist entries
+    // Get all waitlist entries (default status is 'waitlist')
     const { data: pendingWorkers, error: fetchError } = await supabase
         .from('worker_waitlist')
         .select('*')
-        .eq('status', 'pending')
+        .eq('status', 'waitlist')
         .limit(50) // Batch limit to avoid email rate limits
 
     if (fetchError) {
@@ -235,7 +254,7 @@ export async function inviteAllPendingWorkers() {
     }
 
     if (!pendingWorkers || pendingWorkers.length === 0) {
-        return { error: 'No pending workers to invite' }
+        return { error: 'No workers in waitlist to invite' }
     }
 
     let invited = 0

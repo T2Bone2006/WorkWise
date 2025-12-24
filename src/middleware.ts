@@ -15,6 +15,8 @@ export async function middleware(request: NextRequest) {
         '/api/worker-waitlist',
         '/login',
         '/register',
+        '/worker/login',
+        '/worker/register',
         '/admin/login',
         '/sitemap.xml',
         '/robots.txt',

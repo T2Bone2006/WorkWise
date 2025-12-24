@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Loader2, Send } from "lucide-react";
-import { sendInterviewMessage, saveInterviewData } from "@/lib/supabase/interview-actions";
+import { sendInterviewMessage, saveInterviewData, extractInterviewData } from "@/lib/supabase/interview-actions";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 
@@ -27,7 +27,15 @@ export function InterviewChat({ worker }: InterviewChatProps) {
     const [messages, setMessages] = useState<Message[]>([
         {
             role: "assistant",
-            content: `Hi ${worker.full_name}! I'm here to help set up your profile so we can match you with the right jobs. I'll ask you a few questions about your pricing and preferences - should only take 5-10 minutes. Ready to get started?`,
+            content: `Hi ${worker.full_name}! I'm here to help set up your ${worker.trade_type} profile so we can match you with the right jobs and generate accurate quotes.
+
+I'll need to ask you about:
+• Your hourly and day rates
+• Your qualifications and certifications
+• Common jobs you do and typical prices
+• Your service area and travel preferences
+
+Should only take 5-10 minutes. Let's start - what's your standard hourly rate?`,
         },
     ]);
     const [input, setInput] = useState("");
@@ -77,19 +85,27 @@ export function InterviewChat({ worker }: InterviewChatProps) {
 
     const handleComplete = async () => {
         setIsComplete(true);
-        toast.success("Saving your profile...");
+        toast.success("Analyzing your interview...");
 
-        // Extract data from conversation (simplified for MVP)
-        const extractedData = {
-            commonJobs: [],
-            pricingFactors: {},
-            preferredJobTypes: [],
-            avoidedJobTypes: [],
-        };
+        const transcript = messages.map((m) => ({ role: m.role, content: m.content }));
+
+        // Extract structured data from the conversation using AI
+        toast.loading("Extracting your pricing and preferences...", { id: "extract" });
+        const extractedData = await extractInterviewData(transcript, worker.trade_type);
+        toast.dismiss("extract");
+
+        if (!extractedData) {
+            toast.error("Failed to extract interview data. Please try again.");
+            setIsComplete(false);
+            return;
+        }
+
+        console.log("Extracted interview data:", extractedData);
+        toast.success("Saving your profile...");
 
         const result = await saveInterviewData(
             worker.id,
-            messages.map((m) => ({ role: m.role, content: m.content })),
+            transcript,
             extractedData
         );
 
@@ -172,11 +188,16 @@ export function InterviewChat({ worker }: InterviewChatProps) {
                     <Button
                         variant="outline"
                         onClick={handleComplete}
-                        disabled={messages.length < 6 || isComplete}
+                        disabled={messages.filter(m => m.role === "user").length < 5 || isComplete}
                         className="w-full"
                     >
                         {isComplete ? "Saving..." : "Complete Interview"}
                     </Button>
+                    {messages.filter(m => m.role === "user").length < 5 && (
+                        <p className="text-xs text-muted-foreground text-center mt-2">
+                            Please answer more questions before completing ({messages.filter(m => m.role === "user").length}/5 minimum responses)
+                        </p>
+                    )}
                 </div>
             </div>
         </Card>

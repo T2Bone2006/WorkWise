@@ -71,20 +71,21 @@ export async function matchJobToWorkers(jobId: string) {
     console.log(`🆕 No cache hit - generating fresh matches`)
 
     // Get active workers of the matching trade
+    // Filter ONLY by: trade_type + status='active'
     const { data: workers, error: workersError } = await supabase
         .from('workers')
         .select('*')
         .eq('trade_type', tradeType)
         .eq('status', 'active')
 
-    console.log(`👷 Found ${workers?.length || 0} active ${tradeType}s`)
+    console.log(`👷 Found ${workers?.length || 0} active ${tradeType}s in database`)
 
     if (workersError || !workers || workers.length === 0) {
-        console.log('❌ No workers found')
+        console.log('❌ No workers found for trade type:', tradeType)
         return { error: 'No workers found for this job type' }
     }
 
-    // Get AI profiles for these workers
+    // Get AI profiles for these workers (optional - for quote generation)
     const workerIds = workers.map(w => w.id)
     const { data: aiProfiles } = await supabase
         .from('worker_ai_profiles')
@@ -96,56 +97,83 @@ export async function matchJobToWorkers(jobId: string) {
         aiProfiles?.map(p => [p.worker_id, p]) || []
     )
 
-    console.log(`🤖 Found ${aiProfilesMap.size} workers with AI profiles`)
+    console.log(`🤖 ${aiProfilesMap.size}/${workers.length} workers have AI profiles`)
 
-    // Filter workers with AI profiles
-    const eligibleWorkers = workers.filter(w => aiProfilesMap.has(w.id))
+    // All active workers of matching trade are eligible
+    // Coordinates, AI profiles, and rates are OPTIONAL (used for sorting, not filtering)
+    let eligibleWorkers = workers
+
+    console.log(`✅ ${eligibleWorkers.length} workers eligible for matching`)
 
     if (eligibleWorkers.length === 0) {
-        return { error: 'No workers with complete profiles found' }
+        return { error: 'No workers with complete profiles found in the service area' }
     }
 
-    // PRE-FILTER: Smart scoring to get BEST 3 workers
-    console.log(`🎯 Smart filtering ${eligibleWorkers.length} workers to top 3...`)
+    // SORT workers: distance (if available) > day_rate > created_at
+    console.log(`🎯 Sorting ${eligibleWorkers.length} workers to select top 3...`)
 
-    // Calculate a composite score for each worker
-    const scoredWorkers = eligibleWorkers.map(worker => {
-        // Rating score (0-50 points)
-        const ratingScore = (worker.rating || 4.0) * 10 // 5.0 rating = 50 points
+    // Calculate distance for each worker (if coordinates available)
+    const workersWithDistance = eligibleWorkers.map(worker => {
+        let distance: number | null = null
 
-        // Price score (0-30 points) - lower price = higher score
-        const avgRate = eligibleWorkers.reduce((sum, w) => sum + (w.hourly_rate || 0), 0) / eligibleWorkers.length
-        const priceScore = Math.max(0, 30 - ((worker.hourly_rate - avgRate) / avgRate) * 30)
-
-        // Jobs completed score (0-20 points)
-        const jobsScore = Math.min(20, (worker.jobs_completed || 0) * 2)
-
-        const totalScore = ratingScore + priceScore + jobsScore
-
-        return {
-            worker,
-            score: totalScore,
-            breakdown: { ratingScore, priceScore, jobsScore }
+        if (job.property_latitude && job.property_longitude &&
+            worker.base_latitude && worker.base_longitude) {
+            distance = calculateDistance(
+                job.property_latitude,
+                job.property_longitude,
+                worker.base_latitude,
+                worker.base_longitude
+            )
         }
+
+        return { worker, distance }
     })
 
-    // Sort by score and take top 3
-    const top3Workers = scoredWorkers
-        .sort((a, b) => b.score - a.score)
-        .slice(0, 3)
-        .map(scored => {
-            console.log(`✅ Selected ${scored.worker.full_name} (Score: ${scored.score.toFixed(1)} - Rating: ${scored.breakdown.ratingScore.toFixed(1)}, Price: ${scored.breakdown.priceScore.toFixed(1)}, Jobs: ${scored.breakdown.jobsScore.toFixed(1)})`)
-            return scored.worker
-        })
+    // Sort by: distance (closest first, null last) > day_rate (lowest first) > created_at (newest first)
+    const sortedWorkers = workersWithDistance.sort((a, b) => {
+        // Primary: distance (if both have coordinates)
+        if (a.distance !== null && b.distance !== null) {
+            if (a.distance !== b.distance) return a.distance - b.distance
+        }
+        // Workers with coordinates come before those without
+        if (a.distance !== null && b.distance === null) return -1
+        if (a.distance === null && b.distance !== null) return 1
 
-    console.log(`🎯 Filtered down to 3 workers for AI quote generation`)
+        // Secondary: day_rate (lower is better)
+        const aRate = a.worker.day_rate || a.worker.hourly_rate * 8 || Infinity
+        const bRate = b.worker.day_rate || b.worker.hourly_rate * 8 || Infinity
+        if (aRate !== bRate) return aRate - bRate
+
+        // Tertiary: created_at (newer first)
+        return new Date(b.worker.created_at || 0).getTime() - new Date(a.worker.created_at || 0).getTime()
+    })
+
+    // Take top 3 (or all if fewer than 3)
+    const top3Workers = sortedWorkers.slice(0, 3).map(item => item.worker)
+
+    // Log the selected workers
+    console.log(`📋 Returning ${top3Workers.length} workers:`)
+    top3Workers.forEach((worker, i) => {
+        const item = sortedWorkers[i]
+        const distanceStr = item.distance !== null ? `${item.distance.toFixed(1)} miles` : 'no coordinates'
+        const rateStr = worker.day_rate ? `£${worker.day_rate}/day` : (worker.hourly_rate ? `£${worker.hourly_rate}/hr` : 'no rate')
+        console.log(`   ${i + 1}. ${worker.full_name} (${distanceStr}, ${rateStr})`)
+    })
+
+    if (top3Workers.length === 0) {
+        return { error: 'No eligible workers found after filtering' }
+    }
 
     // Generate matches for top 3 workers IN PARALLEL
     const matchPromises = top3Workers.map(async (worker) => {
-        const aiProfile = aiProfilesMap.get(worker.id)!
+        // Use AI profile if available, otherwise use defaults
+        const aiProfile = aiProfilesMap.get(worker.id) || {
+            common_jobs: [],
+            pricing_factors: {}
+        }
 
-        // Calculate distance
-        let distance = 5
+        // Calculate distance and travel cost
+        let distance = 0
         let travelCost = 0
 
         if (job.property_latitude && job.property_longitude &&
@@ -158,16 +186,13 @@ export async function matchJobToWorkers(jobId: string) {
                 worker.base_longitude
             )
 
-            // Skip if outside service radius
-            if (distance > (worker.service_radius_miles || 0)) {
-                console.log(`❌ Worker ${worker.full_name} too far: ${distance.toFixed(1)} miles`)
-                return null
+            // Calculate travel cost (some workers have a free radius, charge beyond that)
+            const freeRadius = 5 // First 5 miles free
+            if (distance > freeRadius && worker.travel_fee_per_mile) {
+                travelCost = (distance - freeRadius) * worker.travel_fee_per_mile
             }
 
-            // Calculate travel cost if beyond free radius
-            if (distance > (worker.service_radius_miles || 0)) {
-                travelCost = (distance - (worker.service_radius_miles || 0)) * (worker.travel_fee_per_mile || 0)
-            }
+            console.log(`📍 ${worker.full_name}: ${distance.toFixed(1)} miles, travel cost: £${travelCost.toFixed(2)}`)
         } else {
             console.log(`ℹ️ No coordinates - assuming local job for ${worker.full_name}`)
         }
