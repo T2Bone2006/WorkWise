@@ -382,11 +382,11 @@ export default function WorkersLandingPage() {
                             className="inline-flex items-center gap-2 rounded-full border border-red-500/20 bg-red-500/10 px-4 py-1.5 mb-6"
                         >
                             <ShieldAlert className="h-4 w-4 text-red-500" />
-                            <span className="text-sm font-medium text-red-600 dark:text-red-200">The Industry is Broken</span>
+                            <span className="text-sm font-medium text-red-600 dark:text-red-200">The Industry needs a change</span>
                         </motion.div>
 
                         <h2 className="text-4xl md:text-6xl font-bold tracking-tight text-slate-900 dark:text-white mb-6">
-                            Stop paying to <span className="text-red-500">work.</span>
+                            You <span className="text-red-500">Don't</span> need to pay for Work.
                         </h2>
                         <p className="text-lg text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">
                             Traditional platforms charge you for leads you don&apos;t win and memberships you don&apos;t need.
