@@ -382,7 +382,7 @@ export default function WorkersLandingPage() {
                             className="inline-flex items-center gap-2 rounded-full border border-red-500/20 bg-red-500/10 px-4 py-1.5 mb-6"
                         >
                             <ShieldAlert className="h-4 w-4 text-red-500" />
-                            <span className="text-sm font-medium text-red-600 dark:text-red-200">The Industry needs a change</span>
+                            <span className="text-sm font-medium text-red-600 dark:text-red-200">The Industry needs to change</span>
                         </motion.div>
 
                         <h2 className="text-4xl md:text-6xl font-bold tracking-tight text-slate-900 dark:text-white mb-6">
